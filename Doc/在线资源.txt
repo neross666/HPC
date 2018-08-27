@@ -1,0 +1,6 @@
+Intel指令集资料：
+https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=SSE2&cats=Load&expand=3253,3146
+
+《深入理解计算机系统》
+http://csapp.cs.cmu.edu/3e/home.html
+https://github.com/vonzhou/CSAPP
