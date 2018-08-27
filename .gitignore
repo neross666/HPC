@@ -1,0 +1,6 @@
+
+*.log
+*.ipch
+*.opendb
+*.db
+.vs/HpcLabs/v15/.suo
