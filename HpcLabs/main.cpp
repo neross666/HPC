@@ -2,25 +2,13 @@
 #include <iostream>
 #include <numeric>
 #include "Maxtrix.h"
+#include "dbg.h"
 
 using namespace std;
 
 
 static long num_steps = 1000000;
 
-void DetectMemoryLeaks(bool on_off)
-{
-	int flags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-	if (!on_off)
-		flags &= ~_CRTDBG_LEAK_CHECK_DF;
-	else
-	{
-		flags |= _CRTDBG_LEAK_CHECK_DF;
-		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-	}
-	_CrtSetDbgFlag(flags);
-}
 
 double CalculatePi()
 {

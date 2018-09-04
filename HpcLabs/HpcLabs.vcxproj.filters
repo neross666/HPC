@@ -13,30 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Toolbox">
+      <UniqueIdentifier>{c9827412-5c18-4ba0-b2a4-8868f6bb20f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Maxtrix.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="TimeClock.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CpuID.h">
-      <Filter>头文件</Filter>
+      <Filter>Toolbox</Filter>
     </ClInclude>
     <ClInclude Include="dbg.h">
-      <Filter>头文件</Filter>
+      <Filter>Toolbox</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeClock.h">
+      <Filter>Toolbox</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TimeClock.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CpuID.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Toolbox</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="dbg.cpp">
+      <Filter>Toolbox</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeClock.cpp">
+      <Filter>Toolbox</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
