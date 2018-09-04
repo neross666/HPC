@@ -12,7 +12,10 @@ using namespace std;
 
 void DetectMemoryLeaks(bool on_off);
 
+void PrintMemDistribute();
 
+
+// 生成的dmp文件与exe、pdb文件在放同一个目录，使用vs打开dmp文件，运行即可查看到程序最后发生错误的位置
 class CCreateDump
 {
 public:	
