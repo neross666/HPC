@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HpcLabs", "HpcLabs\HpcLabs.vcxproj", "{3E9BBD78-F7B7-46F3-8757-B64042F7E441}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSAPP", "CSAPP\CSAPP.vcxproj", "{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{3E9BBD78-F7B7-46F3-8757-B64042F7E441}.Release|x64.Build.0 = Release|x64
 		{3E9BBD78-F7B7-46F3-8757-B64042F7E441}.Release|x86.ActiveCfg = Release|Win32
 		{3E9BBD78-F7B7-46F3-8757-B64042F7E441}.Release|x86.Build.0 = Release|Win32
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Debug|x64.ActiveCfg = Debug|x64
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Debug|x64.Build.0 = Debug|x64
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Debug|x86.ActiveCfg = Debug|Win32
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Debug|x86.Build.0 = Debug|Win32
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Release|x64.ActiveCfg = Release|x64
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Release|x64.Build.0 = Release|x64
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Release|x86.ActiveCfg = Release|Win32
+		{B0E03B2C-30A3-4DAA-98A8-90D24A4AD401}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
