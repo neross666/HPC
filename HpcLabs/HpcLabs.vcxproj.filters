@@ -16,6 +16,9 @@
     <Filter Include="Toolbox">
       <UniqueIdentifier>{c9827412-5c18-4ba0-b2a4-8868f6bb20f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Toolbox\profiler">
+      <UniqueIdentifier>{440e094c-ad71-45e4-a97a-73623a6220e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Maxtrix.h">
@@ -27,8 +30,11 @@
     <ClInclude Include="dbg.h">
       <Filter>Toolbox</Filter>
     </ClInclude>
-    <ClInclude Include="TimeClock.h">
-      <Filter>Toolbox</Filter>
+    <ClInclude Include="profiler\function.h">
+      <Filter>Toolbox\profiler</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler\Profiler.h">
+      <Filter>Toolbox\profiler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -41,8 +47,11 @@
     <ClCompile Include="dbg.cpp">
       <Filter>Toolbox</Filter>
     </ClCompile>
-    <ClCompile Include="TimeClock.cpp">
-      <Filter>Toolbox</Filter>
+    <ClCompile Include="profiler\function.cpp">
+      <Filter>Toolbox\profiler</Filter>
+    </ClCompile>
+    <ClCompile Include="profiler\Profiler.cpp">
+      <Filter>Toolbox\profiler</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

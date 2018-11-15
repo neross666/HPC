@@ -156,13 +156,15 @@
     <ClInclude Include="CpuID.h" />
     <ClInclude Include="dbg.h" />
     <ClInclude Include="Maxtrix.h" />
-    <ClInclude Include="TimeClock.h" />
+    <ClInclude Include="profiler\function.h" />
+    <ClInclude Include="profiler\Profiler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CpuID.cpp" />
     <ClCompile Include="dbg.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="TimeClock.cpp" />
+    <ClCompile Include="profiler\function.cpp" />
+    <ClCompile Include="profiler\Profiler.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

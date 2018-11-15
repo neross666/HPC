@@ -4,16 +4,17 @@
 #include "Maxtrix.h"
 #include "dbg.h"
 
+#include <windows.h>
+
 using namespace std;
 
 
 static long num_steps = 1000000;
 
 
-double CalculatePi()
-{
-	TimeClock tc(__FUNCTION__);
 
+double CalculatePi()
+{		
 	double x;
 	double pi;
 	double sum=0.0;
@@ -27,14 +28,12 @@ double CalculatePi()
 	pi = step*sum;
 
 	cout << "CalculatePi:" << pi << endl;
-	
+			
 	return pi;
 }
 
 double CalculatePiMp()
 {
-	TimeClock tc(__FUNCTION__);
-
 	int tid;
 	double x;
 	double pi;
@@ -68,8 +67,6 @@ double CalculatePiMp()
 
 double CalculatePiMpFor()
 {
-	TimeClock tc(__FUNCTION__);
-
 	double x;
 	int tid;
 
@@ -104,8 +101,6 @@ double CalculatePiMpFor()
 
 double CalculatePiMpForWithReduction()
 {
-	TimeClock tc(__FUNCTION__);
-
 	double x;
 	int tid;
 
@@ -137,8 +132,6 @@ double CalculatePiMpForWithReduction()
 
 double CalculatePiMpCritical()
 {
-	TimeClock tc(__FUNCTION__);
-
 	int tid;
 
 	double pi=0.0;
@@ -172,8 +165,6 @@ double CalculatePiMpCritical()
 
 void MonteCarlo()
 {
-	TimeClock tc(__FUNCTION__);
-
 	long long max=10000;
 	long long count=0;
 	double x,y,z,bulk;
@@ -198,8 +189,6 @@ void MonteCarlo()
 
 void MonteCarloMp()
 {
-	TimeClock tc(__FUNCTION__);
-
 	long long max=10000;
 	long long count=0;
 	double x,y,z,bulk;
@@ -280,13 +269,6 @@ int main()
 // 	__m64 Z = _mm_mul_su32(C, D);
 // 	int ret = _mm_cvtsi64_si32(Z);
 	
-
-// 	CalculatePi();
-// 	CalculatePiMp();
-// 	CalculatePiMpFor();
-// 	CalculatePiMpForWithReduction();
-// 	CalculatePiMpCritical();
-
 // 	MonteCarlo();
 // 	MonteCarloMp();
 

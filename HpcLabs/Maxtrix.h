@@ -4,10 +4,11 @@
 #include <intrin.h>
 #include <assert.h>
 #include <omp.h>
-
-#include "TimeClock.h"
+#include "profiler/Profiler.h"
 
 #define NUM_THREADS 8
+
+using namespace std;
 
 template <class T>
 class Maxtrix
@@ -18,6 +19,8 @@ public:
 
 	vector<vector<T>> GenerateMaxtrix(long long nrow, long long ncol)
 	{
+		TIMING
+
 		vector<vector<T>> rst;
 		time_t t;
 		srand((unsigned)time(&t));
@@ -48,11 +51,6 @@ public:
 
 	vector<vector<double>> Multiply(const vector<vector<double>>& arrA, const vector<vector<double>>& arrB, bool sse)
 	{
-		string func_name(__FUNCTION__);
-		if (sse)
-			func_name += "_sse";
-		TimeClock tc(func_name);
-
 		int rowA = arrA.size();
 		int colA = arrA[0].size();
 		int rowB = arrB.size();
@@ -108,11 +106,6 @@ public:
 
 	vector<vector<double>> MultiplyMp(const vector<vector<double>>& arrA, const vector<vector<double>>& arrB, bool sse)
 	{
-		string func_name(__FUNCTION__);
-		if (sse)
-			func_name += "_sse";
-		TimeClock tc(func_name);
-
 		int rowA = arrA.size();
 		int colA = arrA[0].size();
 		int rowB = arrB.size();
