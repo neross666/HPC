@@ -1,6 +1,6 @@
 #include "Profiler.h"
-#include "function.h"
 #include <assert.h>
+#include <iostream>
 
 namespace TimerSys
 {
@@ -70,7 +70,7 @@ namespace TimerSys
 	}
 #endif
 
-	//---------------------------------------------------
+
 	Profiler* Profiler::Instance()
 	{
 		static Profiler s_instanse;
@@ -87,7 +87,7 @@ namespace TimerSys
 
 	Function* Profiler::getFunc(std::string name)
 	{
-		std::map<std::string, Function*>::iterator iter = m_Function.find(name);
+		auto iter = m_Function.find(name);
 		if (iter != m_Function.end())
 		{
 			return iter->second;
@@ -175,10 +175,9 @@ namespace TimerSys
 
 	void Profiler::clear()
 	{
-		std::map<std::string, Function*>::iterator Iter = m_Function.begin();
-		for ( ;Iter != m_Function.end(); Iter++)
+		for (auto func : m_Function)
 		{
-			delete Iter->second;
+			delete func.second;
 		}
 		m_Function.clear();
 	}
@@ -186,6 +185,16 @@ namespace TimerSys
 	void Profiler::constructCallTree()
 	{
 
+	}
+
+	void Profiler::print()
+	{
+		for (auto fun : m_Function)
+		{
+			Function* pfun = fun.second;
+			std::string name = pfun->getName();
+			std::cout << name.c_str() << ":" << pfun->getCurTime() << std::endl;
+		}
 	}
 
 }

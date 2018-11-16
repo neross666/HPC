@@ -1,11 +1,12 @@
 #pragma once
+#include "function.h"
 #include <mutex>
 #include <map>
 #include <stack>
 
 //#define _GH_Gh
 
-#define TIMING TimerSys::Timing(__FUNCTION__);
+#define TIMING TimerSys::Timing timing(__FUNCTION__);
 
 
 typedef void (*pCallBack)(std::string name, float cost);
@@ -34,6 +35,8 @@ namespace TimerSys
 		void clear();
 
 		void constructCallTree();
+
+		void print();
 
 	private:
 		Profiler();

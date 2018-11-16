@@ -7,7 +7,7 @@
 #include <windows.h>
 
 using namespace std;
-
+using namespace TimerSys;
 
 static long num_steps = 1000000;
 
@@ -230,7 +230,7 @@ int main()
 	
 	cout << setiosflags(ios::fixed);
 	cout << setprecision(10);
-		
+
 
 	//short result[8] = {0};
 	//int A[] = { 0xEF01, 0xEE02, 0xEA03, 0xFF04, 0xEC05, 0xEB06, 0xEF07, 0xEF08 };

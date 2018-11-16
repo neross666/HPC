@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <time.h>
 #include <intrin.h>
 #include <assert.h>
 #include <omp.h>

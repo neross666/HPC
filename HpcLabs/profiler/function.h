@@ -1,6 +1,9 @@
 #pragma once
 #include <set>
 #include <time.h>
+#include <chrono>
+
+using namespace std::chrono;
 
 namespace TimerSys
 {
@@ -25,9 +28,9 @@ namespace TimerSys
 
 		void stopTimer( float& time);
 
-		long long getStartTime(){return m_startTime;}
+		steady_clock::time_point getStartTime(){ return m_startTime; }
 
-		long long getEndTime(){return m_endTime;}
+		steady_clock::time_point getEndTime(){ return m_endTime; }
 						
 	protected:
 		std::string		m_funcName;
@@ -36,11 +39,11 @@ namespace TimerSys
 		float			m_totalTime;
 		float			m_curTime;
 		float			m_avgTime;
-		clock_t			m_startTime;
-		clock_t			m_endTime;
+		steady_clock::time_point			m_startTime;
+		steady_clock::time_point			m_endTime;
 
 	public:
-		Function*		m_parent;
+		Function*			m_parent;
 		std::set<Function*> m_chilren;
 	};
 }

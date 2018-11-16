@@ -7,8 +7,6 @@ namespace TimerSys
 		m_totalTime(0.0), 
 		m_numCalls(0), 
 		m_numIgnore(1),
-		m_startTime(0),
-		m_endTime(0),
 		m_curTime(0.0f),
 		m_avgTime(0.0f),
 		m_parent(NULL),
@@ -58,14 +56,14 @@ namespace TimerSys
 
 	void Function::startTimer()
 	{
-		m_startTime = clock();
+		m_startTime = steady_clock::now();
 	}
 
 	// Unit: ms
 	void Function::stopTimer( float &time)
 	{
-		m_endTime = clock();
-		time = (float) ( m_endTime - m_startTime) / CLOCKS_PER_SEC * 1000;
-		m_startTime = 0;
+		m_endTime = steady_clock::now();
+		duration<float, std::ratio<1,1000>> diff = m_endTime - m_startTime;
+		time = diff.count();
 	}	
 }
