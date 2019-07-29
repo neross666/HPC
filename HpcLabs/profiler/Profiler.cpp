@@ -193,7 +193,7 @@ namespace TimerSys
 		{
 			Function* pfun = fun.second;
 			std::string name = pfun->getName();
-			std::cout << name.c_str() << ":" << pfun->getCurTime() << std::endl;
+			std::cout << name.c_str() << ": " << pfun->getCurTime() << " ms" << std::endl;
 		}
 	}
 

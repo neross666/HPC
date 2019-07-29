@@ -6,7 +6,8 @@
 
 //#define _GH_Gh
 
-#define TIMING TimerSys::Timing timing(__FUNCTION__);
+//#define TIMING TimerSys::Timing timing(__FUNCTION__);
+#define TIMING(fun_name) TimerSys::Timing timing(fun_name);
 
 
 typedef void (*pCallBack)(std::string name, float cost);
