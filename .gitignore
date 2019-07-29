@@ -10,3 +10,6 @@
 *.idb
 *.ilk
 /Debug/HpcLabs.exe
+*.db-shm
+*.db-wal
+x64/Debug/HpcLabs.exe
