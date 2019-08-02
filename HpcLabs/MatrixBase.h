@@ -113,6 +113,40 @@ public:
 		return false;
 	}
 
+	MatrixBase* GpuTraverse()
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		dst->Create(this->m_rows, this->m_cols);
+
+		T* pdst = dst->m_pData;
+		T* pdst_d = nullptr;
+		size_t pitch_dst = 0;
+		CHECK(cudaMallocPitch(&pdst_d, &pitch_dst, dst->m_cols * sizeof(T), dst->m_rows));
+		CHECK(cudaDeviceSynchronize());
+
+		{
+			// 			cudaSharedMemConfig sConfig;
+			// 			CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
+			// 			sConfig = cudaSharedMemBankSizeEightByte;
+			// 			CHECK(cudaDeviceSetSharedMemConfig(sConfig));
+			// 			CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
+			// 			CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
+
+			dim3 block(32, 16);
+			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+			TIMING("TraverseKernelSMEMRect")
+				TraverseKernelSMEMRect << <grid, block >> > (pdst_d, pitch_dst, dst->m_rows, dst->m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
+
+		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch_dst, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
+		CHECK(cudaDeviceSynchronize());
+
+		cudaFree(pdst_d);
+		return dst;
+	}
+
 	MatrixBase* CpuAdd(const MatrixBase& a)
 	{
 		MatrixBase<T>* dst = new MatrixBase<T>;
@@ -405,36 +439,21 @@ public:
 			CHECK(cudaMemcpy2D(pb_d, pitch_b, pb, b.m_pitch, b.m_cols * sizeof(T), b.m_rows, cudaMemcpyHostToDevice));
 			CHECK(cudaDeviceSynchronize());
 
-// 			{
-// 				dim3 block(1024);
-// 				dim3 grid((nsize - 1) / block.x + 1);
-// 				TIMING("WarmupMulti")
-// 					WarmupMulti<<<grid, block >>> (pself_d, pb_d, pdst_d,
-// 						pitch_self, pitch_b, pitch_dst, this->m_rows, this->m_cols, b.m_cols);
-// 				CHECK(cudaGetLastError());
-// 				CHECK(cudaDeviceSynchronize());
-// 			}
-// 			{
-// 				dim3 block(32, 16);
-// 				dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
-// 				TIMING("MultiKernel")
-// 					MultiKernel << <grid, block >> > (pself_d, pb_d, pdst_d,
-// 						pitch_self, pitch_b, pitch_dst, this->m_rows, this->m_cols, b.m_cols);
-// 				CHECK(cudaGetLastError());
-// 				CHECK(cudaDeviceSynchronize());
-// 			}
 			{
-// 				cudaSharedMemConfig sConfig;
-// 				CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
-// 				sConfig = cudaSharedMemBankSizeEightByte;
-// 				CHECK(cudaDeviceSetSharedMemConfig(sConfig));
-// 				CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
-// 				CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
-
-				dim3 block(32, 32);
+				dim3 block(1024);
+				dim3 grid((nsize - 1) / block.x + 1);
+				TIMING("WarmupMulti")
+					WarmupMulti << <grid, block >> > (pself_d, pb_d, pdst_d,
+						pitch_self, pitch_b, pitch_dst, this->m_rows, this->m_cols, b.m_cols);
+				CHECK(cudaGetLastError());
+				CHECK(cudaDeviceSynchronize());
+			}
+			{
+				dim3 block(32, 16);
 				dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
-				TIMING("MultiKernelSMEM")
-					MultiKernelSMEM << <grid, block, block.x*block.y*sizeof(T)>> > (pdst_d);
+				TIMING("MultiKernel")
+					MultiKernel << <grid, block >> > (pself_d, pb_d, pdst_d,
+						pitch_self, pitch_b, pitch_dst, this->m_rows, this->m_cols, b.m_cols);
 				CHECK(cudaGetLastError());
 				CHECK(cudaDeviceSynchronize());
 			}

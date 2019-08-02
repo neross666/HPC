@@ -227,25 +227,51 @@ __global__ void MultiKernel(T* src1, T* src2, T*dst,
 }
 #pragma endregion 乘法运算
 
+
+// bank_no = (addr/4)%32
+// nvprof  --metrics shared_load_transactions_per_request
+// nvprof  --metrics shared_store_transactions_per_request
 template<class T>
-__global__ void MultiKernelSMEM(T* dst)
+__global__ void TraverseKernelSMEM(T* dst, size_t pitch, size_t rows, size_t cols)
 {
 	__shared__ T tile[32][32];
-	unsigned int tid = threadIdx.x + threadIdx.y*blockDim.x;
-
-	tile[threadIdx.y][threadIdx.x] = tid;
-	__syncthreads();
-	dst[tid] = tile[threadIdx.y][threadIdx.x];
-}
-
-template<class T>
-__global__ void MultiKernelSMEMDyn(T* dst)
-{
-	extern __shared__ T tile[];	
 	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
 	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
 
-	tile[idx_r] = idx_r;
-	__syncthreads();
-	dst[idx_r] = tile[idx_c];
+	if (idx_r < rows && idx_c < cols)
+	{
+		unsigned int bid = blockIdx.y * gridDim.x + blockIdx.x;
+		unsigned int tid = bid * (blockDim.x * blockDim.y) + threadIdx.y*blockDim.x + threadIdx.x;
+		tile[threadIdx.y][threadIdx.x] = tid;				// 行主序写
+		__syncthreads();
+		
+		size_t offset = idx_r * pitch;
+		T* ptr_d = (T*)((char*)dst + offset);
+		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// 行主序写
+	}
+}
+
+template<class T>
+__global__ void TraverseKernelSMEMRect(T* dst, size_t pitch, size_t rows, size_t cols)
+{
+	__shared__ T tile[16][32+2];					// 填充，消除bank冲突
+	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
+	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
+
+	if (idx_r < rows && idx_c < cols)
+	{
+		unsigned int bid = blockIdx.y * gridDim.x + blockIdx.x;
+		unsigned int tid = bid * (blockDim.x * blockDim.y) + threadIdx.y*blockDim.x + threadIdx.x;
+		unsigned int idx = threadIdx.y*blockDim.x + threadIdx.x;
+
+		tile[threadIdx.y][threadIdx.x] = tid;		// 行主序写
+		__syncthreads();
+
+		unsigned int irow = idx / blockDim.y;
+		unsigned int icol = idx % blockDim.y;
+
+		size_t offset = idx_r * pitch;
+		T* ptr_d = (T*)((char*)dst + offset);
+		ptr_d[idx_c] = tile[icol][irow];			// 列主序读
+	}
 }
