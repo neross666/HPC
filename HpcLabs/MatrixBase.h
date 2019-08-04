@@ -457,6 +457,15 @@ public:
 				CHECK(cudaGetLastError());
 				CHECK(cudaDeviceSynchronize());
 			}
+			{
+				dim3 block(TILE_WIDTH, TILE_WIDTH);
+				dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+				TIMING("MultiKernelTile")
+					MultiKernelTile << <grid, block>> > (pself_d, pb_d, pdst_d,
+						pitch_self, pitch_b, pitch_dst, this->m_rows, this->m_cols, b.m_cols);
+				CHECK(cudaGetLastError());
+				CHECK(cudaDeviceSynchronize());
+			}
 
 			CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch_dst, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
 			CHECK(cudaDeviceSynchronize());

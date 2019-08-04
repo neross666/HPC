@@ -13,3 +13,15 @@
 *.db-shm
 *.db-wal
 x64/Debug/HpcLabs.exe
+HpcLabs/x64/Debug/kernel.cu-1475426010.deps
+HpcLabs/x64/Debug/kernel.cu.cache
+HpcLabs/x64/Debug/main.cpp-340168684.deps
+HpcLabs/x64/Debug/main.cpp.cache
+HpcLabs/x64/Debug/MatrixBase.cpp-1362933471.deps
+HpcLabs/x64/Debug/MatrixBase.cpp.cache
+HpcLabs/x64/Debug/MatrixBase.h-586596148.deps
+HpcLabs/x64/Debug/MatrixBase.h.cache
+x64/Debug/HpcLabs.exe
+x64/Debug/HpcLabs.exp
+x64/Debug/HpcLabs.lib
+*.cache

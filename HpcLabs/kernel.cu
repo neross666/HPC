@@ -31,13 +31,14 @@ __global__ void WarmupMulti(int* src1, int* src2, int* dst, size_t pitch_src1, s
 		int* ptr_s1 = (int*)((char*)src1 + offset_s1);
 		int* ptr_d = (int*)((char*)dst + offset_dst);
 
-		ptr_d[idx_c] = 0;
+		int tmp = 0;
 		for (size_t i = 0; i < N; i++)
 		{
 			size_t offset_s2 = i * pitch_src2;
 			int* ptr_s2 = (int*)((char*)src2 + offset_s2);
 
-			ptr_d[idx_c] += ptr_s1[i] * ptr_s2[idx_c];
+			tmp += ptr_s1[i] * ptr_s2[idx_c];
 		}
+		ptr_d[idx_c] = tmp;
 	}
 }
