@@ -55,8 +55,8 @@ public:
 			T* ptr = (T*)((char*)m_pData + offset);
 			for (size_t j = 0; j < m_cols; j++)
 			{
-				//ptr[j] = T(rand() & 0xff);
-				ptr[j] = T(3);
+				ptr[j] = T(rand() & 0xff);
+				//ptr[j] = T(3);
 			}
 		}
 	}
@@ -118,10 +118,14 @@ public:
 		MatrixBase<T>* dst = new MatrixBase<T>;
 		dst->Create(this->m_rows, this->m_cols);
 
+		T* psrc = this->m_pData;
 		T* pdst = dst->m_pData;
 		T* pdst_d = nullptr;
-		size_t pitch_dst = 0;
-		CHECK(cudaMallocPitch(&pdst_d, &pitch_dst, dst->m_cols * sizeof(T), dst->m_rows));
+		T* psrc_d = nullptr;
+		size_t pitch = 0;
+		CHECK(cudaMallocPitch(&psrc_d, &pitch, m_cols * sizeof(T), m_rows));
+		CHECK(cudaMallocPitch(&pdst_d, &pitch, dst->m_cols * sizeof(T), dst->m_rows));
+		CHECK(cudaMemcpy2D(psrc_d, pitch, psrc, m_pitch, m_cols * sizeof(T), m_rows, cudaMemcpyHostToDevice));
 		CHECK(cudaDeviceSynchronize());
 
 		{
@@ -132,17 +136,18 @@ public:
 			// 			CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
 			// 			CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 
-			dim3 block(32, 16);
+			dim3 block(TILE_WIDTH, TILE_WIDTH);
 			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
-			TIMING("TraverseKernelSMEMRect")
-				TraverseKernelSMEMRect << <grid, block >> > (pdst_d, pitch_dst, dst->m_rows, dst->m_cols);
+			TIMING("TraverseKernelSMEM")
+				TraverseKernelSMEM << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
 			CHECK(cudaGetLastError());
 			CHECK(cudaDeviceSynchronize());
 		}
 
-		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch_dst, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
+		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
 		CHECK(cudaDeviceSynchronize());
 
+		cudaFree(psrc_d);
 		cudaFree(pdst_d);
 		return dst;
 	}
@@ -475,6 +480,63 @@ public:
 			cudaFree(pdst_d);
 			cudaDeviceReset();
 		}
+		return dst;
+	}
+
+	MatrixBase* CpuTransposition()
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		dst->Create(this->m_cols, this->m_rows);
+		T* ptr_s = m_pData;
+		T* ptr_d = dst->m_pData;
+		{
+			TIMING("CpuTransposition");
+			for (size_t i = 0; i < dst->m_rows; i++)
+			{
+				size_t offset_d = i * dst->m_pitch;
+				T* ptr_dr = (T*)((char*)ptr_d + offset_d);
+				for (size_t j = 0; j < dst->m_cols; j++)
+				{
+					size_t offset_s = j * this->m_pitch;
+					T* ptr_sr = (T*)((char*)ptr_s + offset_s);
+					ptr_dr[j] = ptr_sr[i];
+				}
+			}
+		}
+
+		return dst;
+	}
+
+	MatrixBase* GpuTransposition()
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		dst->Create(this->m_cols, this->m_rows);
+
+		T* psrc = this->m_pData;
+		T* pdst = dst->m_pData;
+		T* pdst_d = nullptr;
+		T* psrc_d = nullptr;
+		size_t pitch_s = 0;
+		size_t pitch_d = 0;
+ 		CHECK(cudaMallocPitch(&psrc_d, &pitch_s, m_cols * sizeof(T), m_rows));
+		CHECK(cudaMallocPitch(&pdst_d, &pitch_d, dst->m_cols * sizeof(T), dst->m_rows));
+		CHECK(cudaMemcpy2D(psrc_d, pitch_s, psrc, m_pitch, m_cols*sizeof(T), m_rows, cudaMemcpyHostToDevice));
+ 		CHECK(cudaDeviceSynchronize());
+
+		{
+			dim3 block(TILE_WIDTH, TILE_WIDTH);
+			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+			TIMING("TranspositionKernel")
+				TranspositionKernel << <grid, block >> > (psrc_d, pdst_d, pitch_s, pitch_d, dst->m_rows, dst->m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
+
+		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch_d, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
+		CHECK(cudaDeviceSynchronize());
+
+		cudaFree(psrc_d);
+		cudaFree(pdst_d);
 		return dst;
 	}
 

@@ -25,3 +25,8 @@ x64/Debug/HpcLabs.exe
 x64/Debug/HpcLabs.exp
 x64/Debug/HpcLabs.lib
 *.cache
+*.exe
+*.exe
+*.exp
+*.cache
+*.deps

@@ -1,6 +1,7 @@
 #pragma once
 #include <cuda_runtime.h>
 
+#define TILE_WIDTH 32	// 与block的尺寸保持一致
 
 #pragma region 加法运算
 // GPU预热，使用普通计算方式
@@ -229,7 +230,6 @@ __global__ void MultiKernel(T* src1, T* src2, T*dst,
 }
 
 // 先将global显存中的数据读到shared内存中，之后每次都是从shared内存中读取
-#define TILE_WIDTH 32	// 与block的尺寸保持一致
 template<class T>
 __global__ void MultiKernelTile(T* src1, T* src2, T*dst,
 	size_t pitch_src1, size_t pitch_src2, size_t pitch_dst,
@@ -272,21 +272,21 @@ __global__ void MultiKernelTile(T* src1, T* src2, T*dst,
 // nvprof  --metrics shared_load_transactions_per_request
 // nvprof  --metrics shared_store_transactions_per_request
 template<class T>
-__global__ void TraverseKernelSMEM(T* dst, size_t pitch, size_t rows, size_t cols)
+__global__ void TraverseKernelSMEM(T* src, T* dst, size_t pitch, size_t rows, size_t cols)
 {
-	__shared__ T tile[32][32];
+	__shared__ T tile[TILE_WIDTH][TILE_WIDTH];
 	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
 	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
 
 	if (idx_r < rows && idx_c < cols)
 	{
-		unsigned int bid = blockIdx.y * gridDim.x + blockIdx.x;
-		unsigned int tid = bid * (blockDim.x * blockDim.y) + threadIdx.y*blockDim.x + threadIdx.x;
-		tile[threadIdx.y][threadIdx.x] = tid;				// 行主序写
-		__syncthreads();
-		
 		size_t offset = idx_r * pitch;
+		T* ptr_s = (T*)((char*)src + offset);
 		T* ptr_d = (T*)((char*)dst + offset);
+
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// 行主序写
+		__syncthreads();
+
 		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// 行主序写
 	}
 }
@@ -313,5 +313,57 @@ __global__ void TraverseKernelSMEMRect(T* dst, size_t pitch, size_t rows, size_t
 		size_t offset = idx_r * pitch;
 		T* ptr_d = (T*)((char*)dst + offset);
 		ptr_d[idx_c] = tile[icol][irow];			// 列主序读
+	}
+}
+
+
+template<class T>
+__global__ void TransformationKernel(T* src, T* dst, float pos, float bias, size_t pitch, size_t rows, size_t cols)
+{
+	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
+	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
+
+	if (idx_r < rows && idx_c < cols)
+	{
+		size_t offset = idx_r * pitch;
+		T* ptr_d = (T*)((char*)dst + offset);
+		T* ptr_s = (T*)((char*)src + offset);
+		ptr_d[idx_c] = (T)(pos * ptr_s[idx_c] + bias);
+	}
+}
+
+template<class T>
+__global__ void SmoothKernel(T* src, T* dst, size_t pitch, size_t rows, size_t cols)
+{
+	__shared__ T tile[TILE_WIDTH][TILE_WIDTH];
+	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
+	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
+
+	if (idx_r < rows && idx_c < cols)
+	{
+		size_t offset = idx_r * pitch;
+		T* ptr_s = (T*)((char*)src + offset);
+		T* ptr_d = (T*)((char*)dst + offset);
+
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// 行主序写
+		__syncthreads();
+
+		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// 行主序写
+	}
+}
+
+template<class T>
+__global__ void TranspositionKernel(T* src, T* dst, size_t pitch_s, size_t pitch_d, size_t rows, size_t cols)
+{
+	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
+	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
+
+	if (idx_r < rows && idx_c < cols)
+	{
+		size_t offset_s = idx_c * pitch_s;
+		size_t offset_d = idx_r * pitch_d;
+		T* ptr_s = (T*)((char*)src + offset_s);
+		T* ptr_d = (T*)((char*)dst + offset_d);
+		ptr_d[idx_c] = ptr_s[idx_r];
 	}
 }
