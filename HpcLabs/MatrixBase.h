@@ -1,4 +1,4 @@
-ï»¿#pragma once
+#pragma once
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
@@ -39,8 +39,8 @@ public:
 		}
 		m_rows = rows;
 		m_cols = cols;
-		m_pitch = ((8 * sizeof(T)*cols + 31) >> 5) << 2;		// 4å­—èŠ‚å¯¹é½åŽä¸€è¡Œæ•°æ®æ‰€å å­—èŠ‚æ•°
-		m_pData = (T*)_aligned_malloc(m_pitch*rows, 4);		// èµ·å§‹åœ°å€ä¹Ÿè¦4å­—èŠ‚å¯¹é½
+		m_pitch = ((8 * sizeof(T)*cols + 31) >> 5) << 2;		// 4×Ö½Ú¶ÔÆëºóÒ»ÐÐÊý¾ÝËùÕ¼×Ö½ÚÊý
+		m_pData = (T*)_aligned_malloc(m_pitch*rows, 4);		// ÆðÊ¼µØÖ·Ò²Òª4×Ö½Ú¶ÔÆë
 		memset(m_pData, 0, m_pitch*rows);
 		assert((unsigned long long)m_pData % 4 == 0);
 	}
@@ -55,8 +55,8 @@ public:
 			T* ptr = (T*)((char*)m_pData + offset);
 			for (size_t j = 0; j < m_cols; j++)
 			{
-				ptr[j] = T(rand() & 0xff);
-				//ptr[j] = T(3);
+				//ptr[j] = T(rand() & 0xff);
+				ptr[j] = T(49);
 			}
 		}
 	}
@@ -128,21 +128,46 @@ public:
 		CHECK(cudaMemcpy2D(psrc_d, pitch, psrc, m_pitch, m_cols * sizeof(T), m_rows, cudaMemcpyHostToDevice));
 		CHECK(cudaDeviceSynchronize());
 
-		{
-			// 			cudaSharedMemConfig sConfig;
-			// 			CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
-			// 			sConfig = cudaSharedMemBankSizeEightByte;
-			// 			CHECK(cudaDeviceSetSharedMemConfig(sConfig));
-			// 			CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
-			// 			CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
+// 		cudaSharedMemConfig sConfig;
+// 		CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
+// 		sConfig = cudaSharedMemBankSizeEightByte;
+// 		CHECK(cudaDeviceSetSharedMemConfig(sConfig));
+// 		CHECK(cudaDeviceGetSharedMemConfig(&sConfig));
+// 		CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 
+		CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
+		{
 			dim3 block(TILE_WIDTH, TILE_WIDTH);
 			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
-			TIMING("TraverseKernelSMEM")
-				TraverseKernelSMEM << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
+			TIMING("TraverseKernelRow")
+				TraverseKernelRow << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
 			CHECK(cudaGetLastError());
 			CHECK(cudaDeviceSynchronize());
 		}
+		{
+			dim3 block(TILE_WIDTH, TILE_WIDTH);
+			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+			TIMING("TraverseKernelCol")
+				TraverseKernelCol << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
+// 		{
+// 			dim3 block(TILE_WIDTH, TILE_WIDTH);
+// 			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+// 			TIMING("TraverseKernelSMEM")
+// 				TraverseKernelSMEM << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
+// 			CHECK(cudaGetLastError());
+// 			CHECK(cudaDeviceSynchronize());
+// 		}
+// 		{
+// 			dim3 block(TILE_HEIGHT, TILE_WIDTH);
+// 			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
+// 			TIMING("TraverseKernelSMEMRect")
+// 				TraverseKernelSMEMRect << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
+// 			CHECK(cudaGetLastError());
+// 			CHECK(cudaDeviceSynchronize());
+// 		}
 
 		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
 		CHECK(cudaDeviceSynchronize());
@@ -184,7 +209,7 @@ public:
 					T* ptr = (T*)((char*)pself + offset);
 					T* ptr_a = (T*)((char*)pa + offset);
 					T* ptr_c = (T*)((char*)pc + offset);
-					for (size_t j = 0; j < m_cols / 4; j += 4)	// è¿™é‡Œm_colså¿…é¡»è¢«4æ•´é™¤
+					for (size_t j = 0; j < m_cols / 4; j += 4)	// ÕâÀïm_cols±ØÐë±»4Õû³ý
 					{
 						ptr_c[j] = ptr_a[j] + ptr[j];
 						ptr_c[j + 1] = ptr_a[j + 1] + ptr[j + 1];
@@ -524,6 +549,7 @@ public:
  		CHECK(cudaDeviceSynchronize());
 
 		{
+			CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 			dim3 block(TILE_WIDTH, TILE_WIDTH);
 			dim3 grid((dst->m_cols - 1) / block.x + 1, (dst->m_rows - 1) / block.y + 1);
 			TIMING("TranspositionKernel")
@@ -531,8 +557,116 @@ public:
 			CHECK(cudaGetLastError());
 			CHECK(cudaDeviceSynchronize());
 		}
+		{			
+			CHECK(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
+			dim3 block(TILE_HEIGHT, TILE_WIDTH);
+			dim3 grid((m_cols - 1) / block.x + 1, (m_rows - 1) / block.y + 1);
+			TIMING("TranspositionKernelSMEM")
+				TranspositionKernelSMEM << <grid, block >> > (psrc_d, pdst_d, pitch_s, pitch_d, m_rows, m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
 
 		CHECK(cudaMemcpy2D(pdst, dst->m_pitch, pdst_d, pitch_d, dst->m_cols * sizeof(T), dst->m_rows, cudaMemcpyDeviceToHost));
+		CHECK(cudaDeviceSynchronize());
+
+		cudaFree(psrc_d);
+		cudaFree(pdst_d);
+		return dst;
+	}
+
+	MatrixBase* CpuSmooth()
+	{
+		float ceof[7][7];
+		for (int i=0; i<7; i++)
+		{
+			for (int j=0; j<7; j++)
+			{
+				ceof[i][j] = 0.5f;
+			}
+		}
+
+
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		dst->Create(this->m_rows, this->m_cols);
+		T* ptr_s = m_pData;
+		T* ptr_d = dst->m_pData;
+		{
+			TIMING("CpuSmooth");
+			for (size_t r = 0; r < dst->m_rows; r++)
+			{
+				size_t offset_s = r * this->m_pitch;
+				size_t offset_d = r * dst->m_pitch;
+				T* ptr_dr = (T*)((char*)ptr_d + offset_d);
+				for (size_t c = 0; c < dst->m_cols; c++)
+				{
+					float tmp = 0.0f;
+					for (int i = -3; i <= 3; i++)
+					{
+						size_t rr = r;
+						if (r + i < 0 || r + i >= m_rows)
+							rr = r - i;
+						size_t offset_s = rr * this->m_pitch;
+						T* ptr_sr = (T*)((char*)ptr_s + offset_s);
+						for (int j = -3; j <= 3; j++)
+						{
+							size_t cc = c;
+							if (c + j < 0 || c + j >= m_cols)
+								cc = c - j;
+							tmp += ceof[i + 3][j + 3] * ptr_sr[cc];
+						}
+					}
+					ptr_dr[c] = (T)(tmp/49);
+				}
+			}
+		}
+
+		return dst;
+	}
+
+	MatrixBase* GpuSmooth()
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		dst->Create(this->m_rows, this->m_cols);
+
+		T* psrc = this->m_pData;
+		T* pdst = dst->m_pData;
+		T* pdst_d = nullptr;
+		T* psrc_d = nullptr;
+		size_t pitch = 0;
+		CHECK(cudaMallocPitch(&psrc_d, &pitch, m_cols * sizeof(T), m_rows));
+		CHECK(cudaMallocPitch(&pdst_d, &pitch, m_cols * sizeof(T), m_rows));
+		CHECK(cudaMemcpy2D(psrc_d, pitch, psrc, m_pitch, m_cols * sizeof(T), m_rows, cudaMemcpyHostToDevice));
+		CHECK(cudaDeviceSynchronize());
+
+		float ceof[49];
+		for (int i = 0; i < 49; i++)
+			ceof[i] = 0.5f;
+
+		float* pcoef_d = nullptr;
+		CHECK(cudaMalloc(&pcoef_d, 49 * sizeof(float)));
+		CHECK(cudaMemcpy(pcoef_d, ceof, 49 * sizeof(float), cudaMemcpyHostToDevice));
+
+		CHECK(cudaMemcpyToSymbol(coef, ceof, 49 * sizeof(float), 0, cudaMemcpyHostToDevice));
+
+		{
+			dim3 block(TILE_WIDTH, TILE_WIDTH);
+			dim3 grid((m_cols - 1) / block.x + 1, (m_rows - 1) / block.y + 1);
+			TIMING("SmoothKernelCMEM")
+				SmoothKernelCMEM << <grid, block >> > (psrc_d, pdst_d, pitch, m_rows, m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
+		{
+			dim3 block(TILE_WIDTH, TILE_WIDTH);
+			dim3 grid((m_cols - 1) / block.x + 1, (m_rows - 1) / block.y + 1);
+			TIMING("SmoothKernel")
+				SmoothKernel << <grid, block >> > (psrc_d, pdst_d, pcoef_d, pitch, m_rows, m_cols);
+			CHECK(cudaGetLastError());
+			CHECK(cudaDeviceSynchronize());
+		}
+
+		CHECK(cudaMemcpy2D(pdst, m_pitch, pdst_d, pitch, m_cols * sizeof(T), m_rows, cudaMemcpyDeviceToHost));
 		CHECK(cudaDeviceSynchronize());
 
 		cudaFree(psrc_d);

@@ -30,3 +30,8 @@ x64/Debug/HpcLabs.lib
 *.exp
 *.cache
 *.deps
+*.lib
+*.ipdb
+*.iobj
+*.pch
+*.nvuser

@@ -6,8 +6,8 @@
 int main(int argc, char** argv)
 {
 	// 初始化矩阵
-	size_t M = 1 << 10;
-	size_t N = 1 << 11;
+	size_t M = 1 << 11;
+	size_t N = 1 << 10;
 	size_t S = 1 << 11;
 	MatrixBase<int> mat_a, mat_b;
 	mat_a.Create(M, N);
@@ -57,12 +57,27 @@ int main(int argc, char** argv)
 // 	delete multi_gpu;
 // #pragma endregion 乘法
 
-#pragma region 转置
-	MatrixBase<int>* tran_cpu = mat_a.CpuTransposition();
-	MatrixBase<int>* tran_gpu = mat_a.GpuTransposition();
-	*tran_gpu == *tran_cpu;
-	delete tran_gpu;
-#pragma endregion 转置
+// #pragma region 转置
+// 	MatrixBase<int>* tran_cpu = mat_a.CpuTransposition();
+// 	MatrixBase<int>* tran_gpu = mat_a.GpuTransposition();
+// 	
+// 	*tran_gpu == *tran_cpu;
+//	delete tran_cpu;
+// 	delete tran_gpu;
+// #pragma endregion 转置
+
+#pragma region 平滑
+	MatrixBase<int>* smooth_cpu = mat_a.CpuSmooth();
+	MatrixBase<int>* smooth_gpu = mat_a.GpuSmooth();
+
+	//smooth_cpu->Print();
+	//smooth_gpu->Print();
+
+	*smooth_cpu == *smooth_gpu;
+
+	delete smooth_cpu;
+	delete smooth_gpu;
+#pragma endregion 平滑
 
 
 		// 比对时间
