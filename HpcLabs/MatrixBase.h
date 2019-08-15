@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
@@ -39,8 +39,8 @@ public:
 		}
 		m_rows = rows;
 		m_cols = cols;
-		m_pitch = ((8 * sizeof(T)*cols + 31) >> 5) << 2;		// 4◊÷Ω⁄∂‘∆Î∫Û“ª–– ˝æ›À˘’º◊÷Ω⁄ ˝
-		m_pData = (T*)_aligned_malloc(m_pitch*rows, 4);		// ∆ ºµÿ÷∑“≤“™4◊÷Ω⁄∂‘∆Î
+		m_pitch = ((8 * sizeof(T)*cols + 31) >> 5) << 2;		// 4Â≠óËäÇÂØπÈΩêÂêé‰∏ÄË°åÊï∞ÊçÆÊâÄÂç†Â≠óËäÇÊï∞
+		m_pData = (T*)_aligned_malloc(m_pitch*rows, 4);		// Ëµ∑ÂßãÂú∞ÂùÄ‰πüË¶Å4Â≠óËäÇÂØπÈΩê
 		memset(m_pData, 0, m_pitch*rows);
 		assert((unsigned long long)m_pData % 4 == 0);
 	}
@@ -55,8 +55,8 @@ public:
 			T* ptr = (T*)((char*)m_pData + offset);
 			for (size_t j = 0; j < m_cols; j++)
 			{
-				//ptr[j] = T(rand() & 0xff);
-				ptr[j] = T(49);
+				ptr[j] = T(rand() & 0xff);
+				//ptr[j] = T(49);
 			}
 		}
 	}
@@ -209,7 +209,7 @@ public:
 					T* ptr = (T*)((char*)pself + offset);
 					T* ptr_a = (T*)((char*)pa + offset);
 					T* ptr_c = (T*)((char*)pc + offset);
-					for (size_t j = 0; j < m_cols / 4; j += 4)	// ’‚¿Ôm_cols±ÿ–Î±ª4’˚≥˝
+					for (size_t j = 0; j < m_cols / 4; j += 4)	// ËøôÈáåm_colsÂøÖÈ°ªË¢´4Êï¥Èô§
 					{
 						ptr_c[j] = ptr_a[j] + ptr[j];
 						ptr_c[j + 1] = ptr_a[j + 1] + ptr[j + 1];
@@ -672,6 +672,88 @@ public:
 		cudaFree(psrc_d);
 		cudaFree(pdst_d);
 		return dst;
+	}
+
+	MatrixBase* CpuBlend(const MatrixBase& a)
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		if (a.m_rows == m_rows &&
+			a.m_cols == m_cols)
+		{
+			dst->Create(m_rows, m_cols);
+			T* pself = m_pData;
+			T* pa = a.m_pData;
+			T* pc = dst->m_pData;
+			{
+				TIMING("CpuBlend");
+				for (size_t i = 0; i < m_rows; i++)
+				{
+					size_t offset = i * m_pitch;
+					T* ptr = (T*)((char*)pself + offset);
+					T* ptr_a = (T*)((char*)pa + offset);
+					T* ptr_c = (T*)((char*)pc + offset);
+					for (size_t j = 0; j < m_cols; j++)
+					{
+						ptr_c[j] = (T)(0.5*ptr_a[j] + 0.5*ptr[j]);
+					}
+				}
+			}
+		}
+		return dst;
+	}
+
+	MatrixBase* GpuBlend(const MatrixBase& a)
+	{
+		MatrixBase<T>* dst = new MatrixBase<T>;
+		if (a.m_rows == m_rows &&
+			a.m_cols == m_cols)
+		{
+			initDevice(0);
+
+			dst->Create(m_rows, m_cols);
+
+			// ÊúÄÂ§ö4ÈÄöÈÅì
+			cudaChannelFormatDesc desc = cudaCreateChannelDesc<T>();
+			cudaArray_t arr_s = nullptr;
+			cudaArray_t arr_a = nullptr;
+			cudaMallocArray(&arr_s, &desc, m_cols, m_rows);
+			cudaMallocArray(&arr_a, &desc, m_cols, m_rows);
+			cudaMemcpy2DToArray(arr_s, 0, 0, m_pData, m_pitch, m_cols * sizeof(T), m_rows, cudaMemcpyHostToDevice);
+			cudaMemcpy2DToArray(arr_a, 0, 0, a.m_pData, a.m_pitch, a.m_cols * sizeof(T), a.m_rows, cudaMemcpyHostToDevice);
+
+			texRefA.addressMode[0] = cudaAddressModeClamp;
+			texRefA.addressMode[1] = cudaAddressModeClamp;
+			texRefA.filterMode = cudaFilterModeLinear;
+			texRefA.normalized = false;
+			cudaBindTextureToArray(texRefA, arr_s, desc);
+
+			texRefB.addressMode[0] = cudaAddressModeClamp;
+			texRefB.addressMode[1] = cudaAddressModeClamp;
+			texRefB.filterMode = cudaFilterModeLinear;
+			texRefB.normalized = false;
+			cudaBindTextureToArray(texRefB, arr_a, desc);
+
+
+			T* pc_d = nullptr;
+			size_t pitch = 0;
+			CHECK(cudaMallocPitch(&pc_d, &pitch, m_cols * sizeof(T), m_rows));
+			{
+				dim3 block(32, 32);
+				dim3 grid((m_cols - 1) / block.x + 1, (m_rows - 1) / block.y + 1);
+				TIMING("BlendKernel")
+					BlendKernel << <grid, block >> > (pc_d, pitch, m_rows, m_cols);
+				CHECK(cudaGetLastError());
+				CHECK(cudaDeviceSynchronize());
+			}
+			CHECK(cudaMemcpy2D(dst, m_pitch, pc_d, pitch, m_cols * sizeof(T), m_rows, cudaMemcpyDeviceToHost));
+			CHECK(cudaDeviceSynchronize());
+		}
+		return dst;
+	}
+
+	MatrixBase* GpuZoom()
+	{
+
 	}
 
 protected:

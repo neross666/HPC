@@ -66,18 +66,32 @@ int main(int argc, char** argv)
 // 	delete tran_gpu;
 // #pragma endregion 转置
 
-#pragma region 平滑
-	MatrixBase<int>* smooth_cpu = mat_a.CpuSmooth();
-	MatrixBase<int>* smooth_gpu = mat_a.GpuSmooth();
+// #pragma region 平滑
+// 	MatrixBase<int>* smooth_cpu = mat_a.CpuSmooth();
+// 	MatrixBase<int>* smooth_gpu = mat_a.GpuSmooth();
+// 
+// 	//smooth_cpu->Print();
+// 	//smooth_gpu->Print();
+// 
+// 	*smooth_cpu == *smooth_gpu;
+// 
+// 	delete smooth_cpu;
+// 	delete smooth_gpu;
+// #pragma endregion 平滑
 
-	//smooth_cpu->Print();
-	//smooth_gpu->Print();
 
-	*smooth_cpu == *smooth_gpu;
-
-	delete smooth_cpu;
-	delete smooth_gpu;
-#pragma endregion 平滑
+#pragma region 融合
+ 	MatrixBase<int>* blend_cpu = mat_a.CpuBlend(mat_b);
+ 	MatrixBase<int>* blend_gpu = mat_a.GpuBlend(mat_b);
+ 
+ 	//smooth_cpu->Print();
+ 	//smooth_gpu->Print();
+ 
+ 	*blend_cpu == *blend_gpu;
+ 
+ 	delete blend_cpu;
+ 	delete blend_gpu;
+ #pragma endregion 融合
 
 
 		// 比对时间

@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3E9BBD78-F7B7-46F3-8757-B64042F7E441}</ProjectGuid>
-    <RootNamespace>world</RootNamespace>
+    <ProjectGuid>{7876CF4C-4B03-4178-A76F-A3147C946116}</ProjectGuid>
+    <RootNamespace>Texture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -56,9 +56,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>-Xptxas -dlcm=ca %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
-    <CudaLink />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -67,7 +65,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -81,23 +78,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="kernel.cu">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">--ptxas-options=-v %(AdditionalOptions)</AdditionalOptions>
-    </CudaCompile>
-    <CudaCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="freshman.h" />
-    <ClInclude Include="kernel.cuh" />
-    <ClInclude Include="profiler\function.h" />
-    <ClInclude Include="profiler\Profiler.h" />
-    <CudaCompile Include="MatrixBase.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="MatrixBase.cpp" />
-    <ClCompile Include="freshman.cpp" />
-    <ClCompile Include="profiler\function.cpp" />
-    <ClCompile Include="profiler\Profiler.cpp" />
+    <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

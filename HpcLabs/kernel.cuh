@@ -1,14 +1,14 @@
-#pragma once
+ï»¿#pragma once
 #include <cuda_runtime.h>
 
 #define TILE_WIDTH 16	// dim3 block(TILE_HEIGHT, TILE_WIDTH);
 #define TILE_HEIGHT 32
 
-#pragma region ¼Ó·¨ÔËËã
-// GPUÔ¤ÈÈ£¬Ê¹ÓÃÆÕÍ¨¼ÆËã·½Ê½
+#pragma region åŠ æ³•è¿ç®—
+// GPUé¢„çƒ­ï¼Œä½¿ç”¨æ™®é€šè®¡ç®—æ–¹å¼
 __global__ void WarmupAdd(int* src1, int* src2, int*dst, size_t pitch, size_t rows, size_t cols);
 
-// Ê¹ÓÃÆÕÍ¨¼ÆËã·½Ê½£¬Ã¿¸öÊı¾İÓĞÇÒ½öÓĞÒ»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎªÏßĞÔµÄ
+// ä½¿ç”¨æ™®é€šè®¡ç®—æ–¹å¼ï¼Œæ¯ä¸ªæ•°æ®æœ‰ä¸”ä»…æœ‰ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºçº¿æ€§çš„
 template<class T>
 __global__ void AddKernel(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
@@ -23,7 +23,7 @@ __global__ void AddKernel(T* src1, T* src2, T*dst, size_t pitch, size_t rows, si
 	//unsigned int bid = blockIdx.y * gridDim.x + blockIdx.x;
 	//unsigned int tid = bid * (blockDim.x * blockDim.y) + threadIdx.y*blockDim.x + threadIdx.x;
 
-	// ÇóÈ¡¸ÃÏß³ÌºÅ¶ÔÓ¦Êı¾İËùÔÚ¶şÎ¬¾ØÕóÖĞµÄĞĞÁĞË÷Òı
+	// æ±‚å–è¯¥çº¿ç¨‹å·å¯¹åº”æ•°æ®æ‰€åœ¨äºŒç»´çŸ©é˜µä¸­çš„è¡Œåˆ—ç´¢å¼•
 	unsigned int idx_r = tid / cols;
 	unsigned int idx_c = tid % cols;
 	if (idx_r < rows && idx_c < cols)
@@ -36,11 +36,11 @@ __global__ void AddKernel(T* src1, T* src2, T*dst, size_t pitch, size_t rows, si
 	}
 }
 
-// Ê¹ÓÃÆÕÍ¨¼ÆËã·½Ê½£¬Ã¿¸öÊı¾İÓĞÇÒ½öÓĞÒ»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎª¶şÎ¬µÄ
+// ä½¿ç”¨æ™®é€šè®¡ç®—æ–¹å¼ï¼Œæ¯ä¸ªæ•°æ®æœ‰ä¸”ä»…æœ‰ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºäºŒç»´çš„
 template<class T>
 __global__ void AddKernelV2(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
-	// Ïß³Ìy·½ÏòË÷Òı¶ÔÓ¦Êı¾İĞĞ·½ÏòË÷Òı£¬Ïß³Ìx·½ÏòË÷Òı¶ÔÓ¦Êı¾İÁĞ·½ÏòË÷Òı
+	// çº¿ç¨‹yæ–¹å‘ç´¢å¼•å¯¹åº”æ•°æ®è¡Œæ–¹å‘ç´¢å¼•ï¼Œçº¿ç¨‹xæ–¹å‘ç´¢å¼•å¯¹åº”æ•°æ®åˆ—æ–¹å‘ç´¢å¼•
 	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;
 	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;
 	if (idx_r < rows && idx_c < cols)
@@ -53,12 +53,12 @@ __global__ void AddKernelV2(T* src1, T* src2, T*dst, size_t pitch, size_t rows, 
 	}
 }
 
-// Ê¹ÓÃ4ÖØÑ­»·Õ¹¿ª¼ÆËã·½Ê½Ò»£¬Í¬Ò»ĞĞµÄÏàÁÚ4ÁĞÊı¾İ±»Ò»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎªÏßĞÔµÄ
+// ä½¿ç”¨4é‡å¾ªç¯å±•å¼€è®¡ç®—æ–¹å¼ä¸€ï¼ŒåŒä¸€è¡Œçš„ç›¸é‚»4åˆ—æ•°æ®è¢«ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºçº¿æ€§çš„
 template<class T>
 __global__ void Add4UnRollingKernelV1(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
 	// 	{
-	// 		// grid 1D; block 1D; Êı¾İÊ¹ÓÃÒ»Î¬Á¬Ğø´æ´¢·½Ê½£¬Á½¸öÏàÁÚĞĞÖ®¼ä²»´æÔÚ¼äÏ¶
+	// 		// grid 1D; block 1D; æ•°æ®ä½¿ç”¨ä¸€ç»´è¿ç»­å­˜å‚¨æ–¹å¼ï¼Œä¸¤ä¸ªç›¸é‚»è¡Œä¹‹é—´ä¸å­˜åœ¨é—´éš™
 	// 		unsigned int tid = threadIdx.x + blockIdx.x*blockDim.x;
 	// 		unsigned int idx = 4 * tid;
 	// 		if (idx + 3 < size)
@@ -70,11 +70,11 @@ __global__ void Add4UnRollingKernelV1(T* src1, T* src2, T*dst, size_t pitch, siz
 	// 		}
 	// 	}
 
-		// Êı¾İÊ¹ÓÃÒ»Î¬·ÇÁ¬Ğø´æ´¢·½Ê½£¬Á½¸öÏàÁÚĞĞÖ®¼ä´æÔÚ¼äÏ¶
-		// ÇóÈ¡¸ÃÏß³ÌºÅ¶ÔÓ¦Êı¾İËùÔÚ¶şÎ¬¾ØÕóÖĞµÄĞĞÁĞË÷Òı
+		// æ•°æ®ä½¿ç”¨ä¸€ç»´éè¿ç»­å­˜å‚¨æ–¹å¼ï¼Œä¸¤ä¸ªç›¸é‚»è¡Œä¹‹é—´å­˜åœ¨é—´éš™
+		// æ±‚å–è¯¥çº¿ç¨‹å·å¯¹åº”æ•°æ®æ‰€åœ¨äºŒç»´çŸ©é˜µä¸­çš„è¡Œåˆ—ç´¢å¼•
 	unsigned int tid = threadIdx.x + blockIdx.x*blockDim.x;
 	unsigned int idx_r = tid / (cols / 4);
-	unsigned int idx_c = 4 * (tid % (cols / 4));		// ÁĞÊıÎª4µÄ±¶Êı	
+	unsigned int idx_c = 4 * (tid % (cols / 4));		// åˆ—æ•°ä¸º4çš„å€æ•°	
 
 	if (idx_r < rows && (idx_c + 3) < cols)
 	{
@@ -89,11 +89,11 @@ __global__ void Add4UnRollingKernelV1(T* src1, T* src2, T*dst, size_t pitch, siz
 	}
 }
 
-// Ê¹ÓÃ4ÖØÑ­»·Õ¹¿ª¼ÆËã·½Ê½¶ş£¬Í¬Ò»ÁĞµÄÏàÁÚ4ĞĞÊı¾İ±»Ò»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎªÏßĞÔµÄ
+// ä½¿ç”¨4é‡å¾ªç¯å±•å¼€è®¡ç®—æ–¹å¼äºŒï¼ŒåŒä¸€åˆ—çš„ç›¸é‚»4è¡Œæ•°æ®è¢«ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºçº¿æ€§çš„
 template<class T>
 __global__ void Add4UnRollingKernelV2(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
-	// grid 1D; block 1D; Êı¾İÊ¹ÓÃÒ»Î¬Á¬Ğø´æ´¢·½Ê½£¬Á½¸öÏàÁÚĞĞÖ®¼ä²»´æÔÚ¼äÏ¶
+	// grid 1D; block 1D; æ•°æ®ä½¿ç”¨ä¸€ç»´è¿ç»­å­˜å‚¨æ–¹å¼ï¼Œä¸¤ä¸ªç›¸é‚»è¡Œä¹‹é—´ä¸å­˜åœ¨é—´éš™
 //	unsigned int tid = threadIdx.x + 4*blockIdx.x*blockDim.x;
 // 	if (tid + 3 * blockDim.x < size)
 // 	{
@@ -103,8 +103,8 @@ __global__ void Add4UnRollingKernelV2(T* src1, T* src2, T*dst, size_t pitch, siz
 // 		dst[tid + 3 * blockDim.x] = src1[tid + 3 * blockDim.x] + src2[tid + 3 * blockDim.x];
 // 	}
 
-	// Êı¾İÊ¹ÓÃÒ»Î¬·ÇÁ¬Ğø´æ´¢·½Ê½£¬Á½¸öÏàÁÚĞĞÖ®¼ä´æÔÚ¼äÏ¶
-	// ÇóÈ¡¸ÃÏß³ÌºÅ¶ÔÓ¦Êı¾İËùÔÚ¶şÎ¬¾ØÕóÖĞµÄĞĞÁĞË÷Òı
+	// æ•°æ®ä½¿ç”¨ä¸€ç»´éè¿ç»­å­˜å‚¨æ–¹å¼ï¼Œä¸¤ä¸ªç›¸é‚»è¡Œä¹‹é—´å­˜åœ¨é—´éš™
+	// æ±‚å–è¯¥çº¿ç¨‹å·å¯¹åº”æ•°æ®æ‰€åœ¨äºŒç»´çŸ©é˜µä¸­çš„è¡Œåˆ—ç´¢å¼•
 	unsigned int tid = threadIdx.x + blockIdx.x*blockDim.x;
 	unsigned int idx_r = 4 * (tid / cols);
 	unsigned int idx_c = tid % cols;
@@ -136,15 +136,15 @@ __global__ void Add4UnRollingKernelV2(T* src1, T* src2, T*dst, size_t pitch, siz
 	}
 }
 
-// Ê¹ÓÃ4ÖØÑ­»·Õ¹¿ª¼ÆËã·½Ê½Èı£¬Í¬Ò»ĞĞµÄÏàÁÚ4ÁĞÊı¾İ±»Ò»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎª¶şÎ¬µÄ
+// ä½¿ç”¨4é‡å¾ªç¯å±•å¼€è®¡ç®—æ–¹å¼ä¸‰ï¼ŒåŒä¸€è¡Œçš„ç›¸é‚»4åˆ—æ•°æ®è¢«ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºäºŒç»´çš„
 template<class T>
 __global__ void Add4UnRollingKernelV3(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
-	// Ïß³Ìy·½ÏòË÷Òı¶ÔÓ¦Êı¾İĞĞ·½ÏòË÷Òı£¬Ïß³Ìx·½ÏòË÷Òı¶ÔÓ¦4ÁĞÊı¾İÆğÊ¼Ë÷Òı
+	// çº¿ç¨‹yæ–¹å‘ç´¢å¼•å¯¹åº”æ•°æ®è¡Œæ–¹å‘ç´¢å¼•ï¼Œçº¿ç¨‹xæ–¹å‘ç´¢å¼•å¯¹åº”4åˆ—æ•°æ®èµ·å§‹ç´¢å¼•
 	unsigned int tid_y = blockIdx.y*blockDim.y + threadIdx.y;
 	unsigned int tid_x = blockIdx.x*blockDim.x + threadIdx.x;
 	unsigned int idx_r = tid_y;
-	unsigned int idx_c = tid_x << 2;	// ÁĞÊıÎª4µÄ±¶Êı
+	unsigned int idx_c = tid_x << 2;	// åˆ—æ•°ä¸º4çš„å€æ•°
 
 	if (idx_r < rows && (idx_c + 3) < cols)
 	{
@@ -159,14 +159,14 @@ __global__ void Add4UnRollingKernelV3(T* src1, T* src2, T*dst, size_t pitch, siz
 	}
 }
 
-// Ê¹ÓÃ4ÖØÑ­»·Õ¹¿ª¼ÆËã·½Ê½ËÄ£¬Í¬Ò»ĞĞµÄÏàÁÚ4ÁĞÊı¾İ±»Ò»¸öÏß³Ì´¦Àí£¬½«Ïß³ÌÅÅÁĞÀí½âÎª¶şÎ¬µÄ
+// ä½¿ç”¨4é‡å¾ªç¯å±•å¼€è®¡ç®—æ–¹å¼å››ï¼ŒåŒä¸€è¡Œçš„ç›¸é‚»4åˆ—æ•°æ®è¢«ä¸€ä¸ªçº¿ç¨‹å¤„ç†ï¼Œå°†çº¿ç¨‹æ’åˆ—ç†è§£ä¸ºäºŒç»´çš„
 template<class T>
 __global__ void Add4UnRollingKernelV4(T* src1, T* src2, T*dst, size_t pitch, size_t rows, size_t cols)
 {
-	// Ïß³Ìy·½ÏòË÷Òı¶ÔÓ¦Êı¾İĞĞ·½ÏòË÷Òı£¬Ïß³Ìx·½ÏòË÷Òı¶ÔÓ¦4ÁĞÊı¾İÆğÊ¼Ë÷Òı
+	// çº¿ç¨‹yæ–¹å‘ç´¢å¼•å¯¹åº”æ•°æ®è¡Œæ–¹å‘ç´¢å¼•ï¼Œçº¿ç¨‹xæ–¹å‘ç´¢å¼•å¯¹åº”4åˆ—æ•°æ®èµ·å§‹ç´¢å¼•
 	unsigned int tid_y = blockIdx.y*blockDim.y + threadIdx.y;
 	unsigned int tid_x = blockIdx.x*blockDim.x + threadIdx.x;
-	unsigned int idx_r = tid_y << 2;		// ĞĞÊıÎª4µÄ±¶Êı
+	unsigned int idx_r = tid_y << 2;		// è¡Œæ•°ä¸º4çš„å€æ•°
 	unsigned int idx_c = tid_x;
 	if (idx_r + 3 < rows && idx_c < cols)
 	{
@@ -195,15 +195,15 @@ __global__ void Add4UnRollingKernelV4(T* src1, T* src2, T*dst, size_t pitch, siz
 		ptr_d[idx_c] = ptr_s1[idx_c] + ptr_s2[idx_c];
 	}
 }
-#pragma endregion ¼Ó·¨ÔËËã
+#pragma endregion åŠ æ³•è¿ç®—
 
 
-#pragma region ³Ë·¨ÔËËã
+#pragma region ä¹˜æ³•è¿ç®—
 __global__ void WarmupMulti(int* src1, int* src2, int*dst,
 	size_t pitch_src1, size_t pitch_src2, size_t pitch_dst,
 	size_t M, size_t N, size_t S);
 
-// Ã¿´Î¶¼ÊÇ´ÓglobalÏÔ´æÖĞ¶ÁÈ¡£¬ÑÓÊ±ºÜ³¤
+// æ¯æ¬¡éƒ½æ˜¯ä»globalæ˜¾å­˜ä¸­è¯»å–ï¼Œå»¶æ—¶å¾ˆé•¿
 template<class T>
 __global__ void MultiKernel(T* src1, T* src2, T*dst,
 	size_t pitch_src1, size_t pitch_src2, size_t pitch_dst,
@@ -219,7 +219,7 @@ __global__ void MultiKernel(T* src1, T* src2, T*dst,
 		T* ptr_s1 = (T*)((char*)src1 + offset_s1);
 		T* ptr_d = (T*)((char*)dst + offset_dst);
 
-		T tmp = 0;	// Ê¹ÓÃ¼Ä´æÆ÷Ôİ´æ
+		T tmp = 0;	// ä½¿ç”¨å¯„å­˜å™¨æš‚å­˜
 		for (size_t i = 0; i < N; i++)
 		{
 			size_t offset_s2 = i * pitch_src2;
@@ -230,15 +230,15 @@ __global__ void MultiKernel(T* src1, T* src2, T*dst,
 	}
 }
 
-// ÏÈ½«globalÏÔ´æÖĞµÄÊı¾İ¶Áµ½sharedÄÚ´æÖĞ£¬Ö®ºóÃ¿´Î¶¼ÊÇ´ÓsharedÄÚ´æÖĞ¶ÁÈ¡
+// å…ˆå°†globalæ˜¾å­˜ä¸­çš„æ•°æ®è¯»åˆ°sharedå†…å­˜ä¸­ï¼Œä¹‹åæ¯æ¬¡éƒ½æ˜¯ä»sharedå†…å­˜ä¸­è¯»å–
 template<class T>
 __global__ void MultiKernelTile(T* src1, T* src2, T*dst,
 	size_t pitch_src1, size_t pitch_src2, size_t pitch_dst,
 	size_t M, size_t N, size_t S)
 {
-	__shared__ T Ads[TILE_WIDTH][TILE_WIDTH+1];			// src1ÖĞµÄÒ»¸ötileÊı¾İ¿é,paddingÏû³ıbank³åÍ»
-	__shared__ T Bds[TILE_WIDTH][TILE_WIDTH+1];			// src2ÖĞµÄÒ»¸ötileÊı¾İ¿é
-	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;	// dstÊı¾İË÷Òı
+	__shared__ T Ads[TILE_WIDTH][TILE_WIDTH+1];			// src1ä¸­çš„ä¸€ä¸ªtileæ•°æ®å—,paddingæ¶ˆé™¤bankå†²çª
+	__shared__ T Bds[TILE_WIDTH][TILE_WIDTH+1];			// src2ä¸­çš„ä¸€ä¸ªtileæ•°æ®å—
+	unsigned int idx_r = blockIdx.y*blockDim.y + threadIdx.y;	// dstæ•°æ®ç´¢å¼•
 	unsigned int idx_c = blockIdx.x*blockDim.x + threadIdx.x;	// 
 	if (idx_r < M && idx_c < S)
 	{
@@ -247,7 +247,7 @@ __global__ void MultiKernelTile(T* src1, T* src2, T*dst,
 		T* ptr_s1 = (T*)((char*)src1 + offset_s1);
 		T* ptr_d = (T*)((char*)dst + offset_dst);
 		T tmp = 0;
-		size_t nTiles = N / TILE_WIDTH;			// ËùÓĞÊı¾İ¿ÉÒÔ»®·Ö³É¶àÉÙ¸ötile´æ´¢£¬ÕâÀïN±ØĞëÄÜ±»TILE_WIDTHÕû³ı
+		size_t nTiles = N / TILE_WIDTH;			// æ‰€æœ‰æ•°æ®å¯ä»¥åˆ’åˆ†æˆå¤šå°‘ä¸ªtileå­˜å‚¨ï¼Œè¿™é‡ŒNå¿…é¡»èƒ½è¢«TILE_WIDTHæ•´é™¤
 		for (size_t i = 0; i < nTiles; i++)
 		{
 			size_t offset_s2 = (i*TILE_WIDTH + threadIdx.y) * pitch_src2;
@@ -266,10 +266,10 @@ __global__ void MultiKernelTile(T* src1, T* src2, T*dst,
 		ptr_d[idx_c] = tmp;
 	}
 }
-#pragma endregion ³Ë·¨ÔËËã
+#pragma endregion ä¹˜æ³•è¿ç®—
 
 
-#pragma region ±éÀú
+#pragma region éå†
 // nvprof -m gld_transactions_per_request,gst_transactions_per_request HpcLabs.exe
 template<class T>
 __global__ void TraverseKernelRow(T* src, T* dst, size_t pitch, size_t rows, size_t cols)
@@ -282,7 +282,7 @@ __global__ void TraverseKernelRow(T* src, T* dst, size_t pitch, size_t rows, siz
 		size_t offset = idx_r * pitch;
 		T* ptr_s = (T*)((char*)src + offset);
 		T* ptr_d = (T*)((char*)dst + offset);
-		ptr_d[idx_c] = ptr_s[idx_c];		// ĞĞÖ÷Ğò¶ÁĞ´
+		ptr_d[idx_c] = ptr_s[idx_c];		// è¡Œä¸»åºè¯»å†™
 	}
 }
 
@@ -295,7 +295,7 @@ __global__ void TraverseKernelCol(T* src, T* dst, size_t pitch, size_t rows, siz
 	if (idx_r < rows && idx_c < cols)
 	{
 		size_t idx = idx_c * rows + idx_r;
-		dst[idx] = src[idx];			// ÁĞÖ÷Ğò¶ÁĞ´
+		dst[idx] = src[idx];			// åˆ—ä¸»åºè¯»å†™
 	}
 }
 
@@ -314,10 +314,10 @@ __global__ void TraverseKernelSMEM(T* src, T* dst, size_t pitch, size_t rows, si
 		T* ptr_s = (T*)((char*)src + offset);
 		T* ptr_d = (T*)((char*)dst + offset);
 
-		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// ĞĞÖ÷ĞòĞ´
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// è¡Œä¸»åºå†™
 		__syncthreads();
 
-		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// ĞĞÖ÷ĞòĞ´
+		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// è¡Œä¸»åºå†™
 	}
 }
 
@@ -334,17 +334,17 @@ __global__ void TraverseKernelSMEMRect(T* src, T* dst, size_t pitch, size_t rows
 		T* ptr_s = (T*)((char*)src + offset);
 		T* ptr_d = (T*)((char*)dst + offset);
 
-		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// ĞĞÖ÷ĞòĞ´
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// è¡Œä¸»åºå†™
 		__syncthreads();
 
 		unsigned int idx = threadIdx.y*blockDim.x + threadIdx.x;
 		unsigned int irow = idx / blockDim.y;
 		unsigned int icol = idx % blockDim.y;
 
-		ptr_d[idx_c] = tile[icol][irow];					// ÁĞÖ÷Ğò¶Á
+		ptr_d[idx_c] = tile[icol][irow];					// åˆ—ä¸»åºè¯»
 	}
 }
-#pragma endregion ±éÀú
+#pragma endregion éå†
 
 
 template<class T>
@@ -362,7 +362,7 @@ __global__ void TransformationKernel(T* src, T* dst, float pos, float bias, size
 	}
 }
 
-#pragma region Æ½»¬
+#pragma region å¹³æ»‘
 template<class T>
 __global__ void SmoothKernel(T* src, T* dst, float* coef, size_t pitch, size_t rows, size_t cols)
 {
@@ -440,10 +440,10 @@ __global__ void SmoothKernelSMEM(T* src, T* dst, size_t pitch, size_t rows, size
 		T* ptr_s = (T*)((char*)src + offset);
 		T* ptr_d = (T*)((char*)dst + offset);
 
-		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// ĞĞÖ÷ĞòĞ´
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_c];		// è¡Œä¸»åºå†™
 		__syncthreads();
 
-		// ¶Ôµ±Ç°¿é½øĞĞÆ½»¬
+		// å¯¹å½“å‰å—è¿›è¡Œå¹³æ»‘
 		float tmp = 0;
 		for (int i = -3; i < 3; i++)
 		{
@@ -456,12 +456,12 @@ __global__ void SmoothKernelSMEM(T* src, T* dst, size_t pitch, size_t rows, size
 		ptr_d[idx_c] = (T)tmp;
 
 
-		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// ĞĞÖ÷ĞòĞ´
+		ptr_d[idx_c] = tile[threadIdx.y][threadIdx.x];		// è¡Œä¸»åºå†™
 	}
 }
-#pragma endregion Æ½»¬
+#pragma endregion å¹³æ»‘
 
-#pragma region ×ªÖÃ
+#pragma region è½¬ç½®
 template<class T>
 __global__ void TranspositionKernel(T* src, T* dst, size_t pitch_s, size_t pitch_d, size_t rows, size_t cols)
 {
@@ -478,32 +478,48 @@ __global__ void TranspositionKernel(T* src, T* dst, size_t pitch_s, size_t pitch
 	}
 }
 
-// ´ÓnvprofÖĞ¹Û²ìµ½£¬ÎŞÂÛÊÇ°´ĞĞ¶ÁÈ¡»¹ÊÇ°´ÁĞ¶ÁÈ¡£¬È«¾ÖÄÚ´æµÄ¶ÁÈ¡ÊÂÎñ¶¼ÊÇÒ»ÑùµÄ£¬why£¿
+// ä»nvprofä¸­è§‚å¯Ÿåˆ°ï¼Œæ— è®ºæ˜¯æŒ‰è¡Œè¯»å–è¿˜æ˜¯æŒ‰åˆ—è¯»å–ï¼Œå…¨å±€å†…å­˜çš„è¯»å–äº‹åŠ¡éƒ½æ˜¯ä¸€æ ·çš„ï¼Œwhyï¼Ÿ
 template<class T>
 __global__ void TranspositionKernelSMEM(T* src, T* dst, size_t pitch_s, size_t pitch_d, size_t rows, size_t cols)
 {
 	__shared__ float tile[TILE_WIDTH][TILE_HEIGHT+2];
-	unsigned int idx_x = blockDim.x*blockIdx.x + threadIdx.x;	// È«¾Öx×ø±ê
-	unsigned int idx_y = blockDim.y*blockIdx.y + threadIdx.y;	// È«¾Öy×ø±ê
+	unsigned int idx_x = blockDim.x*blockIdx.x + threadIdx.x;	// å…¨å±€xåæ ‡
+	unsigned int idx_y = blockDim.y*blockIdx.y + threadIdx.y;	// å…¨å±€yåæ ‡
 	size_t offset_s = idx_y * pitch_s;
 	T* ptr_s = (T*)((char*)src + offset_s);
 	   	
 	unsigned int bidx, irow, icol;
-	bidx = threadIdx.y*blockDim.x + threadIdx.x;			// µ±Ç°¿éµÄÏß³ÌË÷Òı
-	irow = bidx / blockDim.y;								// ×ªÖÃºóµÄtileµÄĞĞË÷Òı£¬Èç¹ûtileÎª·½Õó£¬ÔòµÈÓÚthreadIdx.y
-	icol = bidx % blockDim.y;								// ×ªÖÃºóµÄtileµÄÁĞË÷Òı£¬Èç¹ûtileÎª·½Õó£¬ÔòµÈÓÚthreadIdx.x
+	bidx = threadIdx.y*blockDim.x + threadIdx.x;			// å½“å‰å—çš„çº¿ç¨‹ç´¢å¼•
+	irow = bidx / blockDim.y;								// è½¬ç½®åçš„tileçš„è¡Œç´¢å¼•ï¼Œå¦‚æœtileä¸ºæ–¹é˜µï¼Œåˆ™ç­‰äºthreadIdx.y
+	icol = bidx % blockDim.y;								// è½¬ç½®åçš„tileçš„åˆ—ç´¢å¼•ï¼Œå¦‚æœtileä¸ºæ–¹é˜µï¼Œåˆ™ç­‰äºthreadIdx.x
 
-	unsigned int ix_d = blockIdx.y*blockDim.y + icol;		// ×ªÖÃºóµÄÈ«¾Öx×ø±ê
-	unsigned int iy_d = blockIdx.x*blockDim.x + irow;		// ×ªÖÃºóµÄÈ«¾Öy×ø±ê
+	unsigned int ix_d = blockIdx.y*blockDim.y + icol;		// è½¬ç½®åçš„å…¨å±€xåæ ‡
+	unsigned int iy_d = blockIdx.x*blockDim.x + irow;		// è½¬ç½®åçš„å…¨å±€yåæ ‡
 	size_t offset_d = iy_d * pitch_d;
 	T* ptr_d = (T*)((char*)dst + offset_d);
 
 	if (iy_d < cols && ix_d < rows)
 	{
-		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_x];		// ÊÇÓÃtile[threadIdx.y][threadIdx.x]£¬¶ø·Çtile[threadIdx.x][threadIdx.y]£¬ÊÇÎªÁËÏû²âbankĞ´³åÍ»
+		tile[threadIdx.y][threadIdx.x] = ptr_s[idx_x];		// æ˜¯ç”¨tile[threadIdx.y][threadIdx.x]ï¼Œè€Œétile[threadIdx.x][threadIdx.y]ï¼Œæ˜¯ä¸ºäº†æ¶ˆæµ‹bankå†™å†²çª
 		__syncthreads();
-		ptr_d[ix_d] = tile[icol][irow];						// ¶Á³ötileÖĞµÄÒ»ÁĞĞ´ÈëdstÖĞµÄÒ»ĞĞ£¬ÊµÏÖ×ªÖÃ
+		ptr_d[ix_d] = tile[icol][irow];						// è¯»å‡ºtileä¸­çš„ä¸€åˆ—å†™å…¥dstä¸­çš„ä¸€è¡Œï¼Œå®ç°è½¬ç½®
 
 	}
 }
-#pragma endregion ×ªÖÃ
+#pragma endregion è½¬ç½®
+
+
+texture<int, cudaTextureType2D, cudaReadModeElementType> texRefA;
+texture<int, cudaTextureType2D, cudaReadModeElementType> texRefB;
+template<class T>
+__global__ void BlendKernel(T*dst, size_t pitch, size_t rows, size_t cols)
+{
+	unsigned int idx_x = blockDim.x*blockIdx.x + threadIdx.x;
+	unsigned int idx_y = blockDim.y*blockIdx.y + threadIdx.y;
+	if (idx_x < cols && idx_y < rows)
+	{
+		size_t offset = idx_y * pitch;
+		T* ptr_dst = (T*)((char*)dst + offset);
+		ptr_dst[idx_x] = (T)(0.5*tex2D(texRefA, idx_x, idx_y) + 0.5*tex2D(texRefB, idx_x, idx_y));
+	}
+}
